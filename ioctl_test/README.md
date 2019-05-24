@@ -12,5 +12,5 @@ depmod
 
 modprobe ioctltest >> /etc/rc.local
 
-KERNEL=="ioctltest",MODE="0666" >> 50-udev-default.rules
+KERNEL=="ioctltest",MODE="0666" >> /etc/udev/rules.d/50-udev-default.rules
 ```
