@@ -3,6 +3,7 @@
 #include <linux/uaccess.h>
 #include <linux/module.h>
 #include <linux/cdev.h>
+#include <linux/device.h>
 #include "ioctl_test.h"
 
 MODULE_LICENSE("GPL");
@@ -14,6 +15,7 @@ MODULE_LICENSE("GPL");
 
 static dev_t g_dev;
 static struct cdev g_cdev;
+static struct class *g_class = NULL;
 
 static void init(void)
 {
@@ -143,6 +145,7 @@ static const struct file_operations g_fops = {
 static int ioctl_test_init(void)
 {
 	int ret;
+	struct device *devp = NULL;
 
 	printk("ioctl_test_init\n");
 
@@ -166,12 +169,25 @@ static int ioctl_test_init(void)
 		printk(KERN_INFO "cdev_add success\n");
 	}
 
+	g_class = class_create(THIS_MODULE, DEVICE_NAME);
+	if(IS_ERR(g_class)) {
+        return PTR_ERR(g_class);
+    }
+
+    devp = device_create(g_class, NULL, g_dev, NULL, "%s", DEVICE_NAME);
+    if(IS_ERR(devp)) {
+        return PTR_ERR(devp);
+    }
+
 	return 0;
 }
 
 static void ioctl_test_exit(void)
 {
 	printk("ioctl_test_exit\n");
+
+	device_destroy(g_class, g_dev);
+	class_destroy(g_class);
 
 	cdev_del(&g_cdev);
 	unregister_chrdev_region(g_dev, DEVICE_CNT);
